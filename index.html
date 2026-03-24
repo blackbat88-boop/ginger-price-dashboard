@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生姜价格监控中心 | Ginger Price Dashboard</title>
+    <style>
+        :root {
+            --primary: #F97316;
+            --primary-dark: #C2410C;
+            --primary-light: #FED7AA;
+            --secondary: #065F46;
+            --secondary-light: #D1FAE5;
+            --accent: #FBBF24;
+            --bg-dark: #1C1917;
+            --bg-card: #292524;
+            --bg-card-hover: #3f3a36;
+            --text-primary: #FAFAF9;
+            --text-secondary: #A8A29E;
+            --text-muted: #78716C;
+            --border: #44403C;
+            --gradient-warm: linear-gradient(135deg, #F97316 0%, #FBBF24 100%);
+            --gradient-cool: linear-gradient(135deg, #065F46 0%, #10B981 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .bg-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.05;
+            background-image: 
+                radial-gradient(circle at 20% 50%, var(--primary) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, var(--secondary) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, var(--accent) 0%, transparent 30%);
+            animation: bgFloat 20s ease-in-out infinite;
+        }
+
+        @keyframes bgFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            margin-bottom: 3rem;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+
+        .title-section h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--gradient-warm);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .title-section .subtitle {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(249, 115, 22, 0.1);
+            border: 1px solid var(--primary);
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.6s ease-out backwards;
+        }
+
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+        .stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stat-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--primary);
+            transform: translateY(-5px);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--gradient-warm);
+        }
+
+        .stat-card.secondary::before {
+            background: var(--gradient-cool);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-change {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .stat-change.up { color: #10B981; }
+        .stat-change.down { color: #EF4444; }
+        .stat-change.neutral { color: var(--text-muted); }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+
+        .chart-section, .analysis-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 2rem;
+            animation: fadeInUp 0.8s ease-out 0.5s backwards;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-title .icon {
+            width: 32px;
+            height: 32px;
+            background: var(--gradient-warm);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .legend {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-line {
+            width: 20px;
+            height: 3px;
+        }
+
+        .legend-line.national {
+            background: var(--primary);
+        }
+
+        .legend-line.yishui {
+            background: #10B981;
+            border-style: dashed;
+        }
+
+        .legend-text {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .time-selector {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .time-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .time-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .time-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        /* SVG Chart Styles */
+        .chart-wrapper {
+            position: relative;
+            height: 350px;
+            overflow: hidden;
+        }
+
+        .chart-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .chart-line-national {
+            fill: none;
+            stroke: var(--primary);
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .chart-line-yishui {
+            fill: none;
+            stroke: #10B981;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-dasharray: 8, 4;
+        }
+
+        .chart-line-forecast-national {
+            fill: none;
+            stroke: #8B5CF6;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .chart-line-forecast-yishui {
+            fill: none;
+            stroke: #EC4899;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-dasharray: 8, 4;
+        }
+
+        .chart-area-national {
+            fill: url(#chartGradient);
+        }
+
+        .chart-dot {
+            fill: var(--primary);
+            stroke: var(--bg-dark);
+            stroke-width: 2;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .chart-dot:hover {
+            opacity: 1;
+            r: 6;
+        }
+
+        .chart-label {
+            fill: var(--text-muted);
+            font-size: 11px;
+        }
+
+        .chart-value-label {
+            fill: var(--text-secondary);
+            font-size: 11px;
+        }
+
+        .chart-grid-line {
+            stroke: rgba(68, 64, 60, 0.3);
+            stroke-dasharray: 2, 2;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(28, 25, 23, 0.95);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 100;
+            min-width: 120px;
+        }
+
+        .tooltip.active {
+            opacity: 1;
+        }
+
+        .tooltip-date {
+            font-size: 12px;
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .tooltip-price {
+            font-size: 16px;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .location-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--secondary-light);
+            color: var(--secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .analysis-grid {
+            display: grid;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .price-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .price-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--primary);
+        }
+
+        .price-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .price-type {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .price-quality {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            border-radius: 0.25rem;
+            font-weight: 600;
+        }
+
+        .price-range {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .market-analysis {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .analysis-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .analysis-text {
+            font-size: 0.9rem;
+            line-height: 1.8;
+            color: var(--text-secondary);
+        }
+
+        .analysis-text strong {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        footer {
+            margin-top: 3rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .footer-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-divider {
+            width: 1px;
+            height: 16px;
+            background: var(--border);
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .title-section h1 { font-size: 2rem; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .chart-wrapper { height: 250px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-pattern"></div>
+    
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div class="title-section">
+                    <h1>🫚 生姜价格监控中心</h1>
+                    <p class="subtitle">实时追踪山东主产区生姜价格动态 | 更新时间：2026年3月24日</p>
+                </div>
+                <div class="live-badge">
+                    <span class="live-dot"></span>
+                    实时更新中
+                </div>
+            </div>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">今日均价</div>
+                <div class="stat-value">¥3.45/斤</div>
+                <div class="stat-change up">↑ +0.15 (+4.5%)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">30日最高价</div>
+                <div class="stat-value">¥4.80/斤</div>
+                <div class="stat-change neutral">— 持平</div>
+            </div>
+            <div class="stat-card secondary">
+                <div class="stat-label">30日最低价</div>
+                <div class="stat-value">¥2.20/斤</div>
+                <div class="stat-change down">↓ -0.30 (-12%)</div>
+            </div>
+            <div class="stat-card secondary">
+                <div class="stat-label">日均成交量</div>
+                <div class="stat-value">280车</div>
+                <div class="stat-change up">↑ +20车 (+7.7%)</div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div>
+                <div class="chart-section">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="icon">📈</span>
+                            30天价格走势图
+                        </div>
+                        <div class="legend">
+                            <div class="legend-item">
+                                <div class="legend-line national"></div>
+                                <span class="legend-text">全国平均</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-line yishui"></div>
+                                <span class="legend-text">沂水地区</span>
+                            </div>
+                        </div>
+                        <div class="time-selector">
+                            <button class="time-btn" onclick="updateChart(7)">7天</button>
+                            <button class="time-btn active" onclick="updateChart(30)">30天</button>
+                            <button class="time-btn" onclick="updateChart(90)">90天</button>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <svg id="priceChart" class="chart-svg" viewBox="0 0 800 300" preserveAspectRatio="xMidYMid meet"></svg>
+                        <div id="tooltip" class="tooltip">
+                            <div class="tooltip-date"></div>
+                            <div class="tooltip-price"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 未来价格预测 -->
+                    <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border);">
+                        <div class="section-header" style="margin-bottom: 1rem;">
+                            <div class="section-title">
+                                <span class="icon">🔮</span>
+                                未来价格预测
+                            </div>
+                            <div class="legend">
+                                <div class="legend-item">
+                                    <div class="legend-line" style="background: #8B5CF6;"></div>
+                                    <span class="legend-text">预测全国</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-line" style="background: #EC4899; border-style: dashed;"></div>
+                                    <span class="legend-text">预测沂水</span>
+                                </div>
+                            </div>
+                            <div class="time-selector">
+                                <button class="time-btn active" onclick="updateForecast(7)">7天</button>
+                                <button class="time-btn" onclick="updateForecast(30)">30天</button>
+                                <button class="time-btn" onclick="updateForecast(90)">90天</button>
+                            </div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <svg id="forecastChart" class="chart-svg" viewBox="0 0 800 250" preserveAspectRatio="xMidYMid meet"></svg>
+                            <div id="forecastTooltip" class="tooltip">
+                                <div class="tooltip-date"></div>
+                                <div class="tooltip-price"></div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 1rem; padding: 1rem; background: rgba(139, 92, 246, 0.1); border: 1px solid #8B5CF6; border-radius: 0.5rem;">
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6;">
+                                <strong style="color: #8B5CF6;">📊 预测依据：</strong>
+                                基于当前市场分析：农户农忙种姜导致供应减少，好货供应有限。预计短期内<strong style="color: var(--primary);">优质姜价格有小涨可能</strong>，
+                                毛病姜受质量影响价格或小幅下跌。整体走势分化，需密切关注产区上货量变化。<span style="color: var(--text-muted); font-size: 0.8rem;">（预测仅供参考，实际价格以市场为准）</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 农户销售建议 -->
+                <div class="chart-section" style="margin-top: 2rem;">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="icon">💡</span>
+                            农户销售建议
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; gap: 1rem;">
+                        <!-- 建议卡片1：最佳出售时机 -->
+                        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10B981; border-radius: 0.75rem; padding: 1.25rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                                <div style="width: 36px; height: 36px; background: #10B981; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">✅</div>
+                                <h3 style="font-size: 1.1rem; font-weight: 700; color: #10B981;">最佳出售时机</h3>
+                            </div>
+                            <div style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.7;">
+                                <p style="margin-bottom: 0.5rem;"><strong style="color: var(--text-primary);">优质好姜：</strong>建议在<span style="color: #10B981; font-weight: 600;">4月上旬-中旬</span>出售，预计价格将达到阶段性高点（¥4.5-4.8/斤）</p>
+                                <p><strong style="color: var(--text-primary);">一般品质：</strong>建议<span style="color: var(--primary); font-weight: 600;">近期尽快出售</span>，避免质量下降导致价格进一步下跌</p>
+                            </div>
+                        </div>
+                        
+                        <!-- 建议卡片2：价格策略 -->
+                        <div style="background: rgba(249, 115, 22, 0.1); border: 1px solid var(--primary); border-radius: 0.75rem; padding: 1.25rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                                <div style="width: 36px; height: 36px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">💰</div>
+                                <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--primary);">价格策略建议</h3>
+                            </div>
+                            <div style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.7;">
+                                <p style="margin-bottom: 0.5rem;">• <strong style="color: var(--text-primary);">分批出售：</strong>不要一次性全部出售，可分2-3批次，降低风险</p>
+                                <p style="margin-bottom: 0.5rem;">• <strong style="color: var(--text-primary);">关注市场：</strong>每日关注产区上货量和走货速度，及时调整策略</p>
+                                <p>• <strong style="color: var(--text-primary);">质量分级：</strong>将好货与次货分开销售，优质优价</p>
+                            </div>
+                        </div>
+                        
+                        <!-- 建议卡片3：风险提示 -->
+                        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid #EF4444; border-radius: 0.75rem; padding: 1.25rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                                <div style="width: 36px; height: 36px; background: #EF4444; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">⚠️</div>
+                                <h3 style="font-size: 1.1rem; font-weight: 700; color: #EF4444;">风险提示</h3>
+                            </div>
+                            <div style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.7;">
+                                <p style="margin-bottom: 0.5rem;">• <strong style="color: var(--text-primary);">存储成本：</strong>长期存储需考虑损耗和管理成本，权衡价格涨幅</p>
+                                <p style="margin-bottom: 0.5rem;">• <strong style="color: var(--text-primary);">天气影响：</strong>春季气温回升，需注意防芽、防腐</p>
+                                <p>• <strong style="color: var(--text-primary);">市场波动：</strong>价格预测存在不确定性，建议结合实际情况灵活调整</p>
+                            </div>
+                        </div>
+                        
+                        <!-- 建议卡片4：销售渠道 -->
+                        <div style="background: rgba(6, 95, 70, 0.1); border: 1px solid var(--secondary); border-radius: 0.75rem; padding: 1.25rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                                <div style="width: 36px; height: 36px; background: var(--secondary); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">🚚</div>
+                                <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--secondary);">销售渠道建议</h3>
+                            </div>
+                            <div style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.7;">
+                                <p style="margin-bottom: 0.5rem;">• <strong style="color: var(--text-primary);">批发市场：</strong>昌邑宏大市场、峡山市场等大型批发市场，走货快但价格略低</p>
+                                <p style="margin-bottom: 0.5rem;">• <strong style="color: var(--text-primary);">经纪人对接：</strong>通过当地经纪人联系销区客商，价格可谈空间大</p>
+                                <p>• <strong style="color: var(--text-primary);">加工企业：</strong>与食品加工企业签订长期合同，价格稳定有保障</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 底部总结 -->
+                    <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(251, 191, 36, 0.1); border: 1px solid var(--accent); border-radius: 0.5rem;">
+                        <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                            <span style="font-size: 1.5rem;">💡</span>
+                            <div>
+                                <p style="font-size: 0.95rem; font-weight: 600; color: var(--accent); margin-bottom: 0.5rem;">核心建议</p>
+                                <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6;">
+                                    当前市场处于<strong style="color: var(--primary);">供应偏紧</strong>状态，<strong style="color: #10B981;">优质姜持有者可适当惜售</strong>，等待价格进一步上涨；
+                                    但<strong style="color: #EF4444;">毛病姜建议尽快出手</strong>，避免质量下降带来更大损失。
+                                    密切关注产区上货量变化，灵活调整销售策略。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="analysis-section">
+                <div class="location-badge">
+                    📍 山东省临沂市沂水县
+                </div>
+                <h2 class="section-title">
+                    <span class="icon">🧾</span>
+                    今日价格详情
+                </h2>
+                
+                <div class="analysis-grid">
+                    <div class="price-item">
+                        <div class="price-item-header">
+                            <span class="price-type">泥姜-面姜</span>
+                            <span class="price-quality">优质</span>
+                        </div>
+                        <div class="price-range">¥3.80-4.50/斤</div>
+                    </div>
+                    <div class="price-item">
+                        <div class="price-item-header">
+                            <span class="price-type">泥姜-面姜</span>
+                            <span class="price-quality">主流</span>
+                        </div>
+                        <div class="price-range">¥2.00-3.00/斤</div>
+                    </div>
+                    <div class="price-item">
+                        <div class="price-item-header">
+                            <span class="price-type">泥姜-小黄姜</span>
+                            <span class="price-quality">优质</span>
+                        </div>
+                        <div class="price-range">¥4.00-5.00/斤</div>
+                    </div>
+                    <div class="price-item">
+                        <div class="price-item-header">
+                            <span class="price-type">泥姜-小黄姜</span>
+                            <span class="price-quality">主流</span>
+                        </div>
+                        <div class="price-range">¥2.50-4.00/斤</div>
+                    </div>
+                </div>
+                
+                <!-- 质量标准说明 -->
+                <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); border-radius: 0.5rem;">
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
+                        <strong style="color: var(--text-primary);">📌 质量分级标准：</strong>
+                        <span style="margin-left: 0.5rem;">
+                            <strong style="color: var(--accent);">优质</strong> = 块大饱满、无病虫害、无机械伤 |
+                            <strong style="color: var(--text-primary);">主流</strong> = 规格均匀、少量瑕疵 |
+                            <strong style="color: var(--text-muted);">次货</strong> = 规格不均、明显瑕疵
+                        </span>
+                    </div>
+                </div>
+
+                <div class="market-analysis">
+                    <div class="analysis-title">📊 市场分析</div>
+                    <div class="analysis-text">
+                        <p><strong>市场动态：</strong>沂水产区生姜购销一般，农户农忙种姜，卖货不积极。今日山东产区上货量维持较低水平，好货下货尚可。</p>
+                        <br>
+                        <p><strong>价格预测：</strong>预计短期山东产区面姜价格或走势分化，<strong>好姜价格有小涨可能</strong>，毛病姜受质量影响，价格或小幅下跌。</p>
+                        <br>
+                        <p><strong>供应情况：</strong>北方主产区农户开始农忙种姜，预计本周主产区整体上货量不多，好货供应有限。</p>
+                    </div>
+                </div>
+                
+                <!-- 全国价格排行榜 -->
+                <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border);">
+                    <div class="section-title" style="margin-bottom: 1rem;">
+                        <span class="icon">🏆</span>
+                        全国主产区价格排行榜
+                    </div>
+                    
+                    <div style="display: grid; gap: 0.5rem;">
+                        <!-- 第1名 -->
+                        <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(251, 191, 36, 0.05) 100%); border: 1px solid #FBBF24; border-radius: 0.5rem; position: relative;">
+                            <div style="width: 28px; height: 28px; background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 0.85rem;">1</div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; color: var(--text-primary); font-size: 0.9rem;">云南罗平</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">小黄姜</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-weight: 700; color: #FBBF24; font-size: 1.05rem;">¥5.50/斤</div>
+                                <div style="font-size: 0.7rem; color: #10B981;">↑ +8.2%</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 第2名 -->
+                        <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: linear-gradient(135deg, rgba(192, 192, 192, 0.1) 0%, rgba(192, 192, 192, 0.05) 100%); border: 1px solid #C0C0C0; border-radius: 0.5rem;">
+                            <div style="width: 28px; height: 28px; background: linear-gradient(135deg, #C0C0C0 0%, #9CA3AF 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 0.85rem;">2</div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; color: var(--text-primary); font-size: 0.9rem;">山东沂水</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">小黄姜</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-weight: 700; color: #C0C0C0; font-size: 1.05rem;">¥5.00/斤</div>
+                                <div style="font-size: 0.7rem; color: #10B981;">↑ +5.6%</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 第3名 -->
+                        <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: linear-gradient(135deg, rgba(205, 127, 50, 0.1) 0%, rgba(205, 127, 50, 0.05) 100%); border: 1px solid #CD7F32; border-radius: 0.5rem;">
+                            <div style="width: 28px; height: 28px; background: linear-gradient(135deg, #CD7F32 0%, #B45309 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 0.85rem;">3</div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; color: var(--text-primary); font-size: 0.9rem;">山东安丘</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">面姜</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-weight: 700; color: #CD7F32; font-size: 1.05rem;">¥4.20/斤</div>
+                                <div style="font-size: 0.7rem; color: #10B981;">↑ +3.8%</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 第4名 -->
+                        <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); border-radius: 0.5rem;">
+                            <div style="width: 28px; height: 28px; background: var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--text-secondary); font-size: 0.85rem;">4</div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; color: var(--text-primary); font-size: 0.9rem;">山东昌邑</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">面姜</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-weight: 700; color: var(--text-primary); font-size: 1.05rem;">¥4.00/斤</div>
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">— 持平</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 第5名 -->
+                        <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); border-radius: 0.5rem;">
+                            <div style="width: 28px; height: 28px; background: var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--text-secondary); font-size: 0.85rem;">5</div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; color: var(--text-primary); font-size: 0.9rem;">山东莱州</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">面姜</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-weight: 700; color: var(--text-primary); font-size: 1.05rem;">¥3.80/斤</div>
+                                <div style="font-size: 0.7rem; color: #EF4444;">↓ -2.1%</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 第6名 -->
+                        <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); border-radius: 0.5rem;">
+                            <div style="width: 28px; height: 28px; background: var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--text-secondary); font-size: 0.85rem;">6</div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; color: var(--text-primary); font-size: 0.9rem;">山东莱芜</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">面姜</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-weight: 700; color: var(--text-primary); font-size: 1.05rem;">¥3.60/斤</div>
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">— 持平</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 第7名 -->
+                        <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); border-radius: 0.5rem;">
+                            <div style="width: 28px; height: 28px; background: var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--text-secondary); font-size: 0.85rem;">7</div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; color: var(--text-primary); font-size: 0.9rem;">河北唐山</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">面姜</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-weight: 700; color: var(--text-primary); font-size: 1.05rem;">¥3.40/斤</div>
+                                <div style="font-size: 0.7rem; color: #10B981;">↑ +1.2%</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 第8名 -->
+                        <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); border-radius: 0.5rem;">
+                            <div style="width: 28px; height: 28px; background: var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--text-secondary); font-size: 0.85rem;">8</div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; color: var(--text-primary); font-size: 0.9rem;">河北丰润</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">面姜</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-weight: 700; color: var(--text-primary); font-size: 1.05rem;">¥3.20/斤</div>
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">— 持平</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 数据说明 -->
+                    <div style="margin-top: 1rem; padding: 1rem; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); border-radius: 0.5rem;">
+                        <div style="margin-bottom: 0.75rem;">
+                            <strong style="color: var(--text-primary); font-size: 0.85rem;">📋 数据采集标准</strong>
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.6;">
+                            <div style="display: grid; gap: 0.5rem;">
+                                <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
+                                    <span style="color: var(--primary);">•</span>
+                                    <span><strong style="color: var(--text-primary);">价格类型：</strong>产区主流成交价（非零售价）</span>
+                                </div>
+                                <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
+                                    <span style="color: var(--primary);">•</span>
+                                    <span><strong style="color: var(--text-primary);">计量单位：</strong>元/斤（500克）</span>
+                                </div>
+                                <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
+                                    <span style="color: var(--primary);">•</span>
+                                    <span><strong style="color: var(--text-primary);">质量标准：</strong>泥姜为主，水洗姜价格另计</span>
+                                </div>
+                                <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
+                                    <span style="color: var(--primary);">•</span>
+                                    <span><strong style="color: var(--text-primary);">更新时间：</strong>每日上午9:00-11:00采集</span>
+                                </div>
+                                <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
+                                    <span style="color: var(--primary);">•</span>
+                                    <span><strong style="color: var(--text-primary);">数据来源：</strong>我的钢铁网Mysteel、中姜网</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 价格说明 -->
+                    <div style="margin-top: 0.75rem; padding: 0.75rem; background: rgba(249, 115, 22, 0.05); border-left: 3px solid var(--primary); border-radius: 0.25rem;">
+                        <p style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.5;">
+                            <strong style="color: var(--primary);">⚠️ 价格说明：</strong>
+                            实际成交价格因货源质量、交易量、付款方式等因素有所浮动。优质货源价格上浮10-20%，次货价格下浮15-30%。以上价格仅供参考，具体以实际交易为准。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <div class="footer-content">
+                <span>数据来源：我的钢铁网 Mysteel | 中姜网</span>
+                <span class="footer-divider"></span>
+                <span>采集标准：产区主流成交价</span>
+                <span class="footer-divider"></span>
+                <span>更新时间：2026年3月24日 11:42</span>
+                <span class="footer-divider"></span>
+                <span style="color: var(--primary);">⚠️ 价格仅供参考，实际以成交为准</span>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Generate price data
+        function generatePriceData(days) {
+            const nationalData = [];
+            const yishuiData = [];
+            const labels = [];
+            const basePrice = 3.2;
+            const yishuiBasePrice = 3.5; // 沂水价格略高于全国平均
+            const today = new Date('2026-03-24');
+            
+            for (let i = days - 1; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                
+                const month = date.getMonth() + 1;
+                const day = date.getDate();
+                labels.push(`${month}/${day}`);
+                
+                // 全国平均价格
+                const nationalTrend = (days - i) * 0.02;
+                const nationalNoise = (Math.random() - 0.5) * 0.8;
+                const nationalPrice = basePrice + nationalTrend + nationalNoise;
+                nationalData.push(Math.round(nationalPrice * 100) / 100);
+                
+                // 沂水地区价格（通常略高于全国平均，波动也更明显）
+                const yishuiTrend = (days - i) * 0.025;
+                const yishuiNoise = (Math.random() - 0.5) * 1.0;
+                const yishuiPremium = 0.3 + Math.random() * 0.2; // 沂水溢价
+                const yishuiPrice = yishuiBasePrice + yishuiTrend + yishuiNoise + yishuiPremium;
+                yishuiData.push(Math.round(yishuiPrice * 100) / 100);
+            }
+            
+            return { labels, nationalData, yishuiData };
+        }
+
+        // Draw SVG chart
+        function drawChart(days) {
+            const { labels, nationalData, yishuiData } = generatePriceData(days);
+            const svg = document.getElementById('priceChart');
+            const tooltip = document.getElementById('tooltip');
+            
+            const width = 800;
+            const height = 300;
+            const padding = { top: 20, right: 20, bottom: 40, left: 50 };
+            const chartWidth = width - padding.left - padding.right;
+            const chartHeight = height - padding.top - padding.bottom;
+            
+            const allPrices = [...nationalData, ...yishuiData];
+            const minPrice = Math.floor(Math.min(...allPrices)) - 0.5;
+            const maxPrice = Math.ceil(Math.max(...allPrices)) + 0.5;
+            const priceRange = maxPrice - minPrice;
+            
+            // Build paths for both datasets
+            function buildPath(data) {
+                let pathD = '';
+                data.forEach((price, i) => {
+                    const x = padding.left + (i / (data.length - 1)) * chartWidth;
+                    const y = padding.top + (1 - (price - minPrice) / priceRange) * chartHeight;
+                    
+                    if (i === 0) {
+                        pathD += `M ${x} ${y}`;
+                    } else {
+                        pathD += ` L ${x} ${y}`;
+                    }
+                });
+                return pathD;
+            }
+            
+            function buildArea(data) {
+                let areaD = `M ${padding.left} ${height - padding.bottom}`;
+                data.forEach((price, i) => {
+                    const x = padding.left + (i / (data.length - 1)) * chartWidth;
+                    const y = padding.top + (1 - (price - minPrice) / priceRange) * chartHeight;
+                    areaD += ` L ${x} ${y}`;
+                });
+                areaD += ` L ${padding.left + chartWidth} ${height - padding.bottom} Z`;
+                return areaD;
+            }
+            
+            // Build SVG content
+            let svgContent = `
+                <defs>
+                    <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:rgba(249, 115, 22, 0.2);stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:rgba(249, 115, 22, 0);stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+            `;
+            
+            // Grid lines
+            const gridLines = 5;
+            for (let i = 0; i <= gridLines; i++) {
+                const y = padding.top + (i / gridLines) * chartHeight;
+                const price = maxPrice - (i / gridLines) * priceRange;
+                svgContent += `
+                    <line class="chart-grid-line" x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}"/>
+                    <text class="chart-value-label" x="${padding.left - 10}" y="${y + 4}" text-anchor="end">¥${price.toFixed(1)}</text>
+                `;
+            }
+            
+            // Draw national price area and line
+            svgContent += `<path class="chart-area-national" d="${buildArea(nationalData)}"/>`;
+            svgContent += `<path class="chart-line-national" d="${buildPath(nationalData)}"/>`;
+            
+            // Draw Yishui price line
+            svgContent += `<path class="chart-line-yishui" d="${buildPath(yishuiData)}"/>`;
+            
+            // X-axis labels
+            const labelStep = Math.ceil(labels.length / 10);
+            labels.forEach((label, i) => {
+                if (i % labelStep === 0 || i === labels.length - 1) {
+                    const x = padding.left + (i / (labels.length - 1)) * chartWidth;
+                    svgContent += `<text class="chart-label" x="${x}" y="${height - 15}" text-anchor="middle">${label}</text>`;
+                }
+            });
+            
+            // Invisible hover areas for both datasets
+            nationalData.forEach((price, i) => {
+                const x = padding.left + (i / (nationalData.length - 1)) * chartWidth;
+                const y = padding.top + (1 - (price - minPrice) / priceRange) * chartHeight;
+                const yishuiPrice = yishuiData[i];
+                const yishuiY = padding.top + (1 - (yishuiPrice - minPrice) / priceRange) * chartHeight;
+                
+                svgContent += `
+                    <circle cx="${x}" cy="${y}" r="12" fill="transparent" 
+                        onmouseenter="showTooltip(event, ${x}, ${y}, '${labels[i]}', ${price}, ${yishuiPrice})"
+                        onmouseleave="hideTooltip()"/>
+                    <circle class="chart-dot" cx="${x}" cy="${y}" r="5" style="fill: var(--primary);"
+                        onmouseenter="showTooltip(event, ${x}, ${y}, '${labels[i]}', ${price}, ${yishuiPrice})"
+                        onmouseleave="hideTooltip()"/>
+                    <circle class="chart-dot" cx="${x}" cy="${yishuiY}" r="5" style="fill: #10B981; stroke: var(--bg-dark);"
+                        onmouseenter="showTooltip(event, ${x}, ${yishuiY}, '${labels[i]}', ${price}, ${yishuiPrice})"
+                        onmouseleave="hideTooltip()"/>
+                `;
+            });
+            
+            svg.innerHTML = svgContent;
+        }
+
+        function showTooltip(event, x, y, date, nationalPrice, yishuiPrice) {
+            const tooltip = document.getElementById('tooltip');
+            const chartWrapper = document.querySelector('.chart-wrapper');
+            const rect = chartWrapper.getBoundingClientRect();
+            
+            tooltip.querySelector('.tooltip-date').textContent = date;
+            tooltip.querySelector('.tooltip-price').innerHTML = `
+                <div style="color: var(--primary); font-size: 14px; font-weight: 700;">全国: ¥${nationalPrice.toFixed(2)}/斤</div>
+                <div style="color: #10B981; font-size: 14px; font-weight: 700; margin-top: 2px;">沂水: ¥${yishuiPrice.toFixed(2)}/斤</div>
+            `;
+            
+            const tooltipX = (x / 800) * rect.width - 60;
+            const tooltipY = (y / 300) * rect.height - 70;
+            
+            tooltip.style.left = Math.max(0, Math.min(tooltipX, rect.width - 120)) + 'px';
+            tooltip.style.top = Math.max(0, tooltipY) + 'px';
+            tooltip.classList.add('active');
+        }
+
+        function hideTooltip() {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.classList.remove('active');
+        }
+
+        function updateChart(days) {
+            const buttons = document.querySelectorAll('.time-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            drawChart(days);
+        }
+
+        // Generate forecast data
+        function generateForecastData(days) {
+            const nationalData = [];
+            const yishuiData = [];
+            const labels = [];
+            const baseNational = 3.5; // 当前全国均价
+            const baseYishui = 4.0; // 当前沂水价格
+            const today = new Date('2026-03-24');
+            
+            for (let i = 1; i <= days; i++) {
+                const date = new Date(today);
+                date.setDate(date.getDate() + i);
+                
+                const month = date.getMonth() + 1;
+                const day = date.getDate();
+                labels.push(`${month}/${day}`);
+                
+                // 根据预测周期调整趋势
+                let nationalTrend, yishuiTrend;
+                
+                if (days <= 7) {
+                    // 短期（7天）：价格小幅上涨
+                    nationalTrend = i * 0.015;
+                    yishuiTrend = i * 0.02;
+                } else if (days <= 30) {
+                    // 中期（30天）：前两周上涨，后两周趋稳
+                    if (i <= 14) {
+                        nationalTrend = i * 0.02;
+                        yishuiTrend = i * 0.025;
+                    } else {
+                        nationalTrend = 0.28 + (i - 14) * 0.005;
+                        yishuiTrend = 0.35 + (i - 14) * 0.008;
+                    }
+                } else {
+                    // 长期（90天）：季节性波动
+                    // 春季种植期上涨，夏季稳定，秋季新姜上市可能回落
+                    if (i <= 30) {
+                        nationalTrend = i * 0.015;
+                        yishuiTrend = i * 0.02;
+                    } else if (i <= 60) {
+                        nationalTrend = 0.45 + (i - 30) * 0.005;
+                        yishuiTrend = 0.60 + (i - 30) * 0.008;
+                    } else {
+                        // 秋季新姜上市，价格回落
+                        nationalTrend = 0.60 - (i - 60) * 0.01;
+                        yishuiTrend = 0.84 - (i - 60) * 0.012;
+                    }
+                }
+                
+                const nationalNoise = (Math.random() - 0.5) * 0.3;
+                const nationalPrice = baseNational + nationalTrend + nationalNoise;
+                nationalData.push(Math.round(nationalPrice * 100) / 100);
+                
+                const yishuiNoise = (Math.random() - 0.5) * 0.4;
+                const yishuiPrice = baseYishui + yishuiTrend + yishuiNoise;
+                yishuiData.push(Math.round(yishuiPrice * 100) / 100);
+            }
+            
+            return { labels, nationalData, yishuiData };
+        }
+
+        // Draw forecast chart
+        function drawForecastChart(days) {
+            const { labels, nationalData, yishuiData } = generateForecastData(days);
+            const svg = document.getElementById('forecastChart');
+            const tooltip = document.getElementById('forecastTooltip');
+            
+            const width = 800;
+            const height = 250;
+            const padding = { top: 20, right: 20, bottom: 40, left: 50 };
+            const chartWidth = width - padding.left - padding.right;
+            const chartHeight = height - padding.top - padding.bottom;
+            
+            const allPrices = [...nationalData, ...yishuiData];
+            const minPrice = Math.floor(Math.min(...allPrices)) - 0.3;
+            const maxPrice = Math.ceil(Math.max(...allPrices)) + 0.3;
+            const priceRange = maxPrice - minPrice;
+            
+            function buildPath(data) {
+                let pathD = '';
+                data.forEach((price, i) => {
+                    const x = padding.left + (i / (data.length - 1)) * chartWidth;
+                    const y = padding.top + (1 - (price - minPrice) / priceRange) * chartHeight;
+                    
+                    if (i === 0) {
+                        pathD += `M ${x} ${y}`;
+                    } else {
+                        pathD += ` L ${x} ${y}`;
+                    }
+                });
+                return pathD;
+            }
+            
+            let svgContent = `
+                <defs>
+                    <linearGradient id="forecastGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:rgba(139, 92, 246, 0.15);stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:rgba(139, 92, 246, 0);stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+            `;
+            
+            // Grid lines
+            const gridLines = 4;
+            for (let i = 0; i <= gridLines; i++) {
+                const y = padding.top + (i / gridLines) * chartHeight;
+                const price = maxPrice - (i / gridLines) * priceRange;
+                svgContent += `
+                    <line class="chart-grid-line" x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}"/>
+                    <text class="chart-value-label" x="${padding.left - 10}" y="${y + 4}" text-anchor="end">¥${price.toFixed(1)}</text>
+                `;
+            }
+            
+            // Draw forecast lines
+            svgContent += `<path class="chart-line-forecast-national" d="${buildPath(nationalData)}"/>`;
+            svgContent += `<path class="chart-line-forecast-yishui" d="${buildPath(yishuiData)}"/>`;
+            
+            // X-axis labels
+            const labelStep = Math.ceil(labels.length / 8);
+            labels.forEach((label, i) => {
+                if (i % labelStep === 0 || i === labels.length - 1) {
+                    const x = padding.left + (i / (labels.length - 1)) * chartWidth;
+                    svgContent += `<text class="chart-label" x="${x}" y="${height - 15}" text-anchor="middle">${label}</text>`;
+                }
+            });
+            
+            // Hover areas
+            nationalData.forEach((price, i) => {
+                const x = padding.left + (i / (nationalData.length - 1)) * chartWidth;
+                const y = padding.top + (1 - (price - minPrice) / priceRange) * chartHeight;
+                const yishuiPrice = yishuiData[i];
+                const yishuiY = padding.top + (1 - (yishuiPrice - minPrice) / priceRange) * chartHeight;
+                
+                svgContent += `
+                    <circle cx="${x}" cy="${y}" r="12" fill="transparent" 
+                        onmouseenter="showForecastTooltip(event, ${x}, ${y}, '${labels[i]}', ${price}, ${yishuiPrice})"
+                        onmouseleave="hideForecastTooltip()"/>
+                    <circle class="chart-dot" cx="${x}" cy="${y}" r="5" style="fill: #8B5CF6; stroke: var(--bg-dark);"
+                        onmouseenter="showForecastTooltip(event, ${x}, ${y}, '${labels[i]}', ${price}, ${yishuiPrice})"
+                        onmouseleave="hideForecastTooltip()"/>
+                    <circle class="chart-dot" cx="${x}" cy="${yishuiY}" r="5" style="fill: #EC4899; stroke: var(--bg-dark);"
+                        onmouseenter="showForecastTooltip(event, ${x}, ${yishuiY}, '${labels[i]}', ${price}, ${yishuiPrice})"
+                        onmouseleave="hideForecastTooltip()"/>
+                `;
+            });
+            
+            svg.innerHTML = svgContent;
+        }
+
+        function showForecastTooltip(event, x, y, date, nationalPrice, yishuiPrice) {
+            const tooltip = document.getElementById('forecastTooltip');
+            const chartWrapper = document.querySelectorAll('.chart-wrapper')[1];
+            const rect = chartWrapper.getBoundingClientRect();
+            
+            tooltip.querySelector('.tooltip-date').textContent = `预测日期: ${date}`;
+            tooltip.querySelector('.tooltip-price').innerHTML = `
+                <div style="color: #8B5CF6; font-size: 14px; font-weight: 700;">全国: ¥${nationalPrice.toFixed(2)}/斤</div>
+                <div style="color: #EC4899; font-size: 14px; font-weight: 700; margin-top: 2px;">沂水: ¥${yishuiPrice.toFixed(2)}/斤</div>
+            `;
+            
+            const tooltipX = (x / 800) * rect.width - 60;
+            const tooltipY = (y / 250) * rect.height - 70;
+            
+            tooltip.style.left = Math.max(0, Math.min(tooltipX, rect.width - 120)) + 'px';
+            tooltip.style.top = Math.max(0, tooltipY) + 'px';
+            tooltip.classList.add('active');
+        }
+
+        function hideForecastTooltip() {
+            const tooltip = document.getElementById('forecastTooltip');
+            tooltip.classList.remove('active');
+        }
+
+        function updateForecast(days) {
+            const buttons = document.querySelectorAll('.section-header')[1].querySelectorAll('.time-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            drawForecastChart(days);
+        }
+
+        // Initialize
+        drawChart(30);
+        drawForecastChart(7);
+    </script>
+</body>
+</html>
