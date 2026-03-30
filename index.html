@@ -847,7 +847,7 @@
             <div class="header-content">
                 <div class="title-section">
                     <h1>🫚 生姜价格监控中心</h1>
-                    <p class="subtitle">实时追踪全国主产区生姜价格动态 | 更新时间：2026年3月28日</p>
+                    <p class="subtitle">实时追踪全国主产区生姜价格动态 | 更新时间：2026年3月30日</p>
                 </div>
                 <div class="live-badge">
                     <span class="live-dot"></span>
@@ -862,7 +862,7 @@
                 <span class="alert-icon">📊</span>
                 <div class="alert-text">
                     <div class="alert-title">行情提示：产区价格稳中趋弱，安丘泥姜持平</div>
-                    <div class="alert-desc">3月28日昌邑琨福市场水洗姜3.35元/斤（较昨日下跌0.05元），宏大市场同步下跌。安丘黑埠子泥姜2.35元/斤持平。一亩田产地均价2.25元/斤，较昨日下跌1.32%。</div>
+                    <div class="alert-desc">2026年3月30日全国生姜均价¥1.15/斤，沂水产区¥1.07/斤。市场购销平稳，价格波动不大。可继续观望，等待时机。</div>
                 </div>
                 <button class="alert-btn" onclick="setupAlert()">设置价格提醒</button>
             </div>
@@ -871,17 +871,17 @@
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-label">今日均价</div>
-                <div class="stat-value">¥1.20/斤</div>
+                <div class="stat-value">¥1.15/斤</div>
                 <div class="stat-change down">↓ -1.32%</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">30日最高价</div>
-                <div class="stat-value">¥1.56/斤</div>
+                <div class="stat-value">¥1.55/斤</div>
                 <div class="stat-change neutral">— 持平</div>
             </div>
             <div class="stat-card secondary">
                 <div class="stat-label">30日最低价</div>
-                <div class="stat-value">¥0.90/斤</div>
+                <div class="stat-value">¥0.83/斤</div>
                 <div class="stat-change down">↓ 产地低位</div>
             </div>
             <div class="stat-card secondary">
@@ -1182,7 +1182,7 @@
                 <div class="market-analysis">
                     <div class="analysis-title">📊 市场分析</div>
                     <div class="analysis-text">
-                        <p><strong>市场动态：</strong>3月28日昌邑琨福市场水洗姜均价3.35元/斤（较昨日下跌0.05元），宏大市场同步下跌至3.35元/斤。安丘黑埠子泥姜2.35元/斤持平，走货偏慢。青州产区走货速度快，价格平稳。一亩田产地均价2.25元/斤，较昨日下跌1.32%。全国批发市场价格区间7.00-13.00元/斤。</p>
+                        <p><strong>市场动态：</strong>2026年3月30日全国生姜均价¥1.15/斤，沂水产区¥1.07/斤。市场购销平稳，价格波动不大。预计短期平稳，可继续观望，等待时机。</p>
                         <br>
                         <p><strong>价格预测：</strong>中姜网行情综述"行情不温不火，刚需采购为主"。预计短期<strong>好货价格稳硬</strong>，毛病姜受走货偏慢影响或继续承压。农户农忙种姜期间，整体上货量有限，价格大幅下跌空间不大。</p>
                     </div>
@@ -1196,7 +1196,7 @@
                 <span class="footer-divider"></span>
                 <span>采集标准：产区主流成交价</span>
                 <span class="footer-divider"></span>
-                <span>更新时间：2026年03月30日 13:44</span>
+                <span>更新时间：2026年03月30日 13:48</span>
                 <span class="footer-divider"></span>
                 <span style="color: var(--primary);">⚠️ 价格仅供参考</span>
             </div>
@@ -1209,9 +1209,9 @@
             const nationalData = [];
             const yishuiData = [];
             const labels = [];
-            const basePrice = 0.95;
-            const yishuiBasePrice = 1.11;
-            const today = new Date('2026-03-27');
+            const basePrice = 1.00;
+            const yishuiBasePrice = 1.07;
+            const today = new Date('2026-03-30');
             
             for (let i = days - 1; i >= 0; i--) {
                 const date = new Date(today);
@@ -1368,9 +1368,9 @@
             const nationalData = [];
             const yishuiData = [];
             const labels = [];
-            const baseNational = 1.20;
-            const baseYishui = 1.11;
-            const today = new Date('2026-03-27');
+            const baseNational = 1.15;
+            const baseYishui = 1.07;
+            const today = new Date('2026-03-30');
             
             for (let i = 1; i <= days; i++) {
                 const date = new Date(today);
