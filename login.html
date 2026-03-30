@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>农产品价格监控中心</title>
+    <style>
+        :root {
+            --bg-primary: #121212;
+            --bg-secondary: #1A1A1A;
+            --bg-card: #1E1E1E;
+            --bg-card-hover: #252525;
+            --text-primary: #FFFFFF;
+            --text-secondary: #BDBDBD;
+            --text-muted: #5C5C5C;
+            --border-light: #2A2A2A;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .bg-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.02;
+            background-image: 
+                radial-gradient(circle at 20% 50%, #333333 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, #2A2A2A 0%, transparent 50%);
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .login-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            box-shadow: var(--shadow-md);
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #FF6B6B 0%, #FFD93D 50%, #6BCB77 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .question {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #FF6B6B;
+            background: var(--bg-card-hover);
+        }
+
+        input[type="text"]::placeholder {
+            color: var(--text-muted);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #FF6B6B 0%, #FFD93D 100%);
+            border: none;
+            color: #000;
+            padding: 12px 24px;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 107, 107, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .error {
+            color: #FF6B6B;
+            font-size: 12px;
+            margin-top: 8px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .products {
+            margin-top: 40px;
+            padding-top: 40px;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .products-title {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+        }
+
+        .product-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .product-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .product-item:hover {
+            background: var(--bg-card-hover);
+            border-color: #FF6B6B;
+            color: var(--text-primary);
+        }
+
+        .product-emoji {
+            margin-right: 8px;
+            font-size: 16px;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 16px;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .hint strong {
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 30px 20px;
+            }
+
+            .title {
+                font-size: 24px;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-pattern"></div>
+
+    <div class="container">
+        <div class="login-card">
+            <!-- 标题 -->
+            <div class="header">
+                <div class="title">🌾 农产品价格监控</div>
+                <div class="subtitle">实时追踪全国主产区价格动态</div>
+            </div>
+
+            <!-- 登录表单 -->
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label class="label">安全验证</label>
+                    <div class="question">
+                        做这个页面的人是谁？
+                    </div>
+                    <div class="input-group">
+                        <input 
+                            type="text" 
+                            id="answer" 
+                            placeholder="输入答案（例：李万30）"
+                            autocomplete="off"
+                            required
+                        >
+                        <button type="submit" class="btn">进入</button>
+                    </div>
+                    <div class="error" id="error"></div>
+                </div>
+            </form>
+
+            <!-- 提示 -->
+            <div class="hint">
+                <strong>提示：</strong>答案格式为"李万"加上<br>
+                <span id="todayDate"></span>
+            </div>
+
+            <!-- 产品列表 -->
+            <div class="products">
+                <div class="products-title">📊 可用产品</div>
+                <div class="product-list">
+                    <div class="product-item" onclick="goToProduct('index.html')">
+                        <span class="product-emoji">🫚</span>
+                        <span>生姜价格监控</span>
+                    </div>
+                    <div class="product-item" onclick="goToProduct('blueberry.html')">
+                        <span class="product-emoji">🫐</span>
+                        <span>蓝莓价格监控</span>
+                    </div>
+                    <div class="product-item" onclick="goToProduct('strawberry.html')">
+                        <span class="product-emoji">🍓</span>
+                        <span>草莓价格监控</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化日期提示
+        function initDateHint() {
+            const today = new Date();
+            const day = today.getDate();
+            const hint = document.getElementById('todayDate');
+            hint.textContent = `今天是 ${today.getMonth() + 1} 月 ${day} 日，答案是：李万${day}`;
+        }
+
+        // 处理登录
+        function handleLogin(event) {
+            event.preventDefault();
+            
+            const answer = document.getElementById('answer').value.trim();
+            const today = new Date();
+            const day = today.getDate();
+            const correctAnswer = `李万${day}`;
+            
+            const errorEl = document.getElementById('error');
+            
+            if (answer === correctAnswer) {
+                // 验证成功，保存到 localStorage
+                localStorage.setItem('authenticated', 'true');
+                localStorage.setItem('authTime', new Date().getTime());
+                
+                // 显示成功提示
+                errorEl.textContent = '✅ 验证成功，正在跳转...';
+                errorEl.style.color = '#6BCB77';
+                errorEl.classList.add('show');
+                
+                // 1秒后跳转到生姜页面
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+            } else {
+                // 验证失败
+                errorEl.textContent = '❌ 答案错误，请重试';
+                errorEl.classList.add('show');
+                document.getElementById('answer').value = '';
+                
+                // 3秒后移除错误提示
+                setTimeout(() => {
+                    errorEl.classList.remove('show');
+                }, 3000);
+            }
+        }
+
+        // 跳转到产品页面
+        function goToProduct(page) {
+            localStorage.setItem('authenticated', 'true');
+            localStorage.setItem('authTime', new Date().getTime());
+            window.location.href = page;
+        }
+
+        // 页面加载时初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            initDateHint();
+            
+            // 如果已登录，自动跳转
+            const authenticated = localStorage.getItem('authenticated');
+            const authTime = localStorage.getItem('authTime');
+            
+            if (authenticated && authTime) {
+                const now = new Date().getTime();
+                const diff = now - parseInt(authTime);
+                // 24小时内有效
+                if (diff < 24 * 60 * 60 * 1000) {
+                    window.location.href = 'index.html';
+                }
+            }
+        });
+
+        // 回车键提交
+        document.getElementById('answer').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
+</body>
+</html>
