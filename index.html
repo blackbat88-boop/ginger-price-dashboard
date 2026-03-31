@@ -972,16 +972,26 @@
                         </div>
                     </div>
                     
-                    <div class="tabs">
-                        <button class="tab-btn active" onclick="switchTab('shandong')">山东省</button>
-                        <button class="tab-btn" onclick="switchTab('hebei')">河北省</button>
-                        <button class="tab-btn" onclick="switchTab('yunnan')">云南省</button>
-                        <button class="tab-btn" onclick="switchTab('other')">其他产区</button>
+                    <div class="tabs category-tabs">
+                        <button class="tab-btn active" onclick="switchCategory('xiaohuangjiang')">小黄姜</button>
+                        <button class="tab-btn" onclick="switchCategory('mianjiang')">面姜</button>
+                        <button class="tab-btn" onclick="switchCategory('dahuangjiang')">大黄姜</button>
                     </div>
-                    
-                    <!-- 山东省 -->
-                    <div id="shandong" class="tab-content active">
-                        <div class="region-grid">
+
+                    <!-- 小黄姜 -->
+                    <div id="xiaohuangjiang" class="tab-content active">
+                        <div class="region-grid" id="xiaohuangjiang-regions"></div>
+                    </div>
+
+                    <!-- 面姜 -->
+                    <div id="mianjiang" class="tab-content">
+                        <div class="region-grid" id="mianjiang-regions"></div>
+                    </div>
+
+                    <!-- 大黄姜 -->
+                    <div id="dahuangjiang" class="tab-content">
+                        <div class="region-grid" id="dahuangjiang-regions"></div>
+                    </div>
                             <div class="region-item">
                                 <div class="region-name">昌邑琨福市场（水洗姜均价）</div>
                                 <div class="region-price">¥3.35/斤</div>
@@ -1021,79 +1031,6 @@
                                 <div class="region-name">安丘黑埠子（泥姜均价）</div>
                                 <div class="region-price">¥2.35/斤</div>
                                 <div class="region-change neutral">— 持平</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- 河北省 -->
-                    <div id="hebei" class="tab-content">
-                        <div class="region-grid">
-                            <div class="region-item">
-                                <div class="region-name">河北丰润（面姜主流）</div>
-                                <div class="region-price">¥2.95/斤</div>
-                                <div class="region-change neutral">— 持平</div>
-                            </div>
-                            <div class="region-item">
-                                <div class="region-name">河北唐山（面姜）</div>
-                                <div class="region-price">¥3.40/斤</div>
-                                <div class="region-change neutral">— 持平</div>
-                            </div>
-                            <div class="region-item">
-                                <div class="region-name">河北邯郸（面姜）</div>
-                                <div class="region-price">¥3.20/斤</div>
-                                <div class="region-change neutral">— 持平</div>
-                            </div>
-                            <div class="region-item">
-                                <div class="region-name">河北安平（大黄姜）</div>
-                                <div class="region-price">¥3.50/斤</div>
-                                <div class="region-change neutral">— 持平</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- 云南省 -->
-                    <div id="yunnan" class="tab-content">
-                        <div class="region-grid">
-                            <div class="region-item">
-                                <div class="region-name">云南罗平（鲜姜一般）</div>
-                                <div class="region-price">¥1.00-2.00/斤</div>
-                                <div class="region-change down">↓ 走货一般</div>
-                            </div>
-                            <div class="region-item">
-                                <div class="region-name">云南罗平（姜种）</div>
-                                <div class="region-price">¥2.00-3.00/斤</div>
-                                <div class="region-change neutral">— 持平</div>
-                            </div>
-                            <div class="region-item">
-                                <div class="region-name">云南罗平（干姜片/块）</div>
-                                <div class="region-price">¥6.00-8.00/斤</div>
-                                <div class="region-change neutral">— 持平</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- 其他产区 -->
-                    <div id="other" class="tab-content">
-                        <div class="region-grid">
-                            <div class="region-item">
-                                <div class="region-name">四川乐山（大黄姜）</div>
-                                <div class="region-price">¥4.50/斤</div>
-                                <div class="region-change up">↑ +3.5%</div>
-                            </div>
-                            <div class="region-item">
-                                <div class="region-name">湖南龙山（小黄姜）</div>
-                                <div class="region-price">¥4.30/斤</div>
-                                <div class="region-change up">↑ +2.8%</div>
-                            </div>
-                            <div class="region-item">
-                                <div class="region-name">贵州毕节（小黄姜）</div>
-                                <div class="region-price">¥4.20/斤</div>
-                                <div class="region-change neutral">— 持平</div>
-                            </div>
-                            <div class="region-item">
-                                <div class="region-name">广西南宁（大黄姜）</div>
-                                <div class="region-price">¥3.80/斤</div>
-                                <div class="region-change down">↓ -1.5%</div>
                             </div>
                         </div>
                     </div>
@@ -1559,9 +1496,53 @@
         function switchTab(tabId) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            
+
             event.target.classList.add('active');
             document.getElementById(tabId).classList.add('active');
+        }
+
+        // Category switching (for ginger types)
+        function switchCategory(categoryId) {
+            // Update tab buttons
+            document.querySelectorAll('.category-tabs .tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.category-tabs .tab-btn').forEach(btn => {
+                if (btn.getAttribute('onclick').includes(categoryId)) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // Update content
+            document.querySelectorAll('.chart-section .tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(categoryId).classList.add('active');
+        }
+
+        // Render region prices for each category
+        function renderCategoryPrices() {
+            if (typeof GingerData === 'undefined') return;
+
+            const categories = ['xiaohuangjiang', 'mianjiang', 'dahuangjiang'];
+
+            categories.forEach(catId => {
+                const category = GingerData.categories[catId];
+                const container = document.getElementById(catId + '-regions');
+                if (!container || !category) return;
+
+                let html = '';
+                category.regions.forEach(region => {
+                    const changeClass = region.change > 0 ? 'up' : (region.change < 0 ? 'down' : 'neutral');
+                    const changeText = region.change > 0 ? `↑ +${(region.change * 100).toFixed(1)}%` :
+                                       (region.change < 0 ? `↓ ${(region.change * 100).toFixed(1)}%` : '— 持平');
+
+                    html += `
+                        <div class="region-item">
+                            <div class="region-name">${region.name}</div>
+                            <div class="region-price">¥${region.price.toFixed(2)}/斤</div>
+                            <div class="region-change ${changeClass}">${changeText}</div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            });
         }
 
         // Alert functions
@@ -1591,6 +1572,7 @@
         // Initialize
         drawChart(30);
         drawForecastChart(7);
+        renderCategoryPrices();
     </script>
 </body>
 </html>
